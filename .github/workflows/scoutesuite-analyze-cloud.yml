@@ -101,8 +101,8 @@ jobs:
     - name: run scoutsuite
       run: |
         docker exec -d scoutsuitegh python3.8 ScoutSuite/scout.py azure --file-auth /credfile.json --no-browser --report-dir /ScoutSuite/scout-report
-    - name: Sleep for 120 seconds
-      run: sleep 120s
+    - name: Sleep for 480 seconds
+      run: sleep 480s
       shell: bash
     - name: docker cp outside container
       run: |
