@@ -1,3 +1,68 @@
+# name: Scoutsuite Analysis
+
+# on:
+#   push:
+#     branches:
+#       - develop
+#       - master
+
+# jobs:
+#   scoutsuite:
+#     runs-on: ubuntu-latest
+#     steps:
+#     # - name: Azure-Login
+#     #   uses: Azure/login@v1
+#     #   with:
+#     #     creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+#     # # - run: |
+#     # #     az resource list
+#     ## az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
+#     - name: git clone
+#       run: |
+#         git clone --branch 5.12.0-rc1 https://github.com/colac/ScoutSuite.git
+#     - name: install requirements
+#       run: |
+#         touch filetodelete.txt
+#         ls -la
+#         cd ScoutSuite
+#         pip install -r requirements.txt
+#     - name: replace json
+#       run: |
+#         cd ScoutSuite
+#         sed -i s/CLIENTID/${{ secrets.ARM_CLIENT_ID }}/g credfile.json
+#         sed -i s/CLIENTSECRET/${{ secrets.ARM_CLIENT_SECRET }}/g credfile.json
+#         sed -i s/SUBID/${{ secrets.ARM_SUBSCRIPTION_ID }}/g credfile.json
+#         sed -i s/TENANTID/${{ secrets.ARM_TENANT_ID }}/g credfile.json
+#     - name: run scoutsuite
+#       run: |
+#         cd ScoutSuite
+#         python3.8 scout.py azure --file-auth credfile.json --no-browser --report-dir ./scoutReport
+
+#     - name: Upload Report Artifact
+#       uses: actions/upload-artifact@v3.1.0
+#       with:
+#         name: scoutsuiteReport
+#         path: ./scoutReport # or path/to/artifact
+
+#   delete-file:
+#     needs: scoutsuite
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: delete file
+#       run: |
+#         cd ScoutSuite
+#         ls -la
+#         rm -rf ../filetodelete.txt
+#         rm -rf credfile.json
+#         echo "after delete"
+#         ls -la
+
+
+
+
+# ######################################################
+# ######################################################
+
 name: Scoutsuite Analysis
 
 on:
@@ -10,49 +75,52 @@ jobs:
   scoutsuite:
     runs-on: ubuntu-latest
     steps:
-    # - name: Azure-Login
-    #   uses: Azure/login@v1
-    #   with:
-    #     creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-    # # - run: |
-    # #     az resource list
-    ## az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
-    - name: git clone
-      run: |
-        git clone https://github.com/colac/ScoutSuite.git
-    - name: install requirements
-      run: |
-        touch filetodelete.txt
-        ls -la
-        cd ScoutSuite
-        pip install -r requirements.txt
+    #create credfile
     - name: replace json
       run: |
-        cd ScoutSuite
-        sed -i s/CLIENTID/${{ secrets.ARM_CLIENT_ID }}/g credfile.json
-        sed -i s/CLIENTSECRET/${{ secrets.ARM_CLIENT_SECRET }}/g credfile.json
-        sed -i s/SUBID/${{ secrets.ARM_SUBSCRIPTION_ID }}/g credfile.json
-        sed -i s/TENANTID/${{ secrets.ARM_TENANT_ID }}/g credfile.json
+        cat << EOF > credfile.json
+        {
+            "clientId": "${{ secrets.ARM_CLIENT_ID }}",
+            "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
+            "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}",
+            "tenantId": "${{ secrets.ARM_TENANT_ID }}",
+            "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+            "resourceManagerEndpointUrl": "https://management.azure.com/",
+            "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+            "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+            "galleryEndpointUrl": "https://gallery.azure.com/",
+            "managementEndpointUrl": "https://management.core.windows.net/"
+          }
+        EOF
+    - name: docker run
+      run: |
+        docker run -t -d --name scoutsuitegh ghcr.io/colac/scoutsuite:master
+    - name: docker cp inside container
+      run: |
+        docker cp credfile.json scoutsuitegh:/
     - name: run scoutsuite
       run: |
-        cd ScoutSuite
-        python3.8 scout.py azure --file-auth credfile.json --no-browser --report-dir ./scoutReport
+        docker exec -d scoutsuitegh python3.8 ScoutSuite/scout.py azure --file-auth /credfile.json --no-browser --report-dir /ScoutSuite/scout-report
+    - name: docker cp outside container
+      run: |
+        docker cp $(docker ps -f ancestor=ghcr.io/colac/scoutsuite:master --format "{{.ID}}"):/ScoutSuite/scout-report ./scoutReport
+    - name: docker rm container
+      run: |
+        docker rm scoutsuitegh
 
     - name: Upload Report Artifact
       uses: actions/upload-artifact@v3.1.0
       with:
         name: scoutsuiteReport
         path: ./scoutReport # or path/to/artifact
-
+#delete credfile
   delete-file:
     needs: scoutsuite
     runs-on: ubuntu-latest
     steps:
     - name: delete file
       run: |
-        cd ScoutSuite
         ls -la
-        rm -rf ../filetodelete.txt
         rm -rf credfile.json
         echo "after delete"
         ls -la
