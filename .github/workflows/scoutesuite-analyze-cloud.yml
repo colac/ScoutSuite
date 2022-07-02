@@ -1,0 +1,33 @@
+name: Scoutsuite Analysis
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+
+
+jobs:
+  scoutsuite:
+    name: Configure and execute Scoutsuite
+    runs-on: ubuntu-latest
+    steps:
+    - name: Azure-Login
+     - uses: Azure/login@v1
+       with:
+        creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+     - run: |
+        az resource list
+    - name: Install and execute Scoutsuite
+      run: |
+        git clone https://github.com/colac/ScoutSuite.git
+        cd ScoutSuite
+        pip install -r requirements.txt
+        python3.8 ScoutSuite/scout.py azure --cli --no-browser --report-dir /ScoutSuite/scoutReport
+    - name: Upload Report Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: scoutsuiteReport
+        path: /ScoutSuite/scoutReport # or path/to/artifact
+
