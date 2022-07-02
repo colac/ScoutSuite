@@ -16,21 +16,38 @@ jobs:
     #     creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
     # # - run: |
     # #     az resource list
+    ## az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
     - name: git clone
       run: |
         git clone https://github.com/colac/ScoutSuite.git
     - name: install requirements
       run: |
+        touch filetodelete.txt
+        ls -la
         cd ScoutSuite
         pip install -r requirements.txt
+    - name: replace json
+      run: |
+        sed -i s/CLIENTID/${{ secrets.ARM_CLIENT_ID }}/g credfile.json
+        sed -i s/CLIENTSECRET/${{ secrets.ARM_CLIENT_SECRET }}/g credfile.json
+        sed -i s/SUBID/${{ secrets.ARM_SUBSCRIPTION_ID }}/g credfile.json
+        sed -i s/TENANTID/${{ secrets.ARM_TENANT_ID }}/g credfile.json
     - name: run scoutsuite
       run: |
-        az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
-        ls -la
-        python3.8 ScoutSuite/scout.py azure --service-principal --tenant ${{ secrets.ARM_TENANT_ID }} --no-browser --report-dir /scoutReport
+        python3.8 scout.py azure --file-auth credfile.json --no-browser --report-dir ./scoutReport
 
     - name: Upload Report Artifact
       uses: actions/upload-artifact@v3.1.0
       with:
         name: scoutsuiteReport
-        path: ./ScoutSuite/scoutReport # or path/to/artifact
+        path: ./scoutReport # or path/to/artifact
+
+  delete-file:
+    runs-on: ubuntu-latest
+    steps:
+    - name: delete file
+      run: |
+        ls -la
+        rm -rf filetodelete.txt
+        echo "after delete"
+        ls -la
