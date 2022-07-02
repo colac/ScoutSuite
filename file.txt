@@ -1,2 +1,0 @@
-The current working directory is: /home/hugo/ScoutSuite
-You are logged in as hugo
