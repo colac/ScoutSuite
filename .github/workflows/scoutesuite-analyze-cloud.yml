@@ -28,12 +28,14 @@ jobs:
         pip install -r requirements.txt
     - name: replace json
       run: |
+        cd ScoutSuite
         sed -i s/CLIENTID/${{ secrets.ARM_CLIENT_ID }}/g credfile.json
         sed -i s/CLIENTSECRET/${{ secrets.ARM_CLIENT_SECRET }}/g credfile.json
         sed -i s/SUBID/${{ secrets.ARM_SUBSCRIPTION_ID }}/g credfile.json
         sed -i s/TENANTID/${{ secrets.ARM_TENANT_ID }}/g credfile.json
     - name: run scoutsuite
       run: |
+        cd ScoutSuite
         python3.8 scout.py azure --file-auth credfile.json --no-browser --report-dir ./scoutReport
 
     - name: Upload Report Artifact
@@ -43,11 +45,14 @@ jobs:
         path: ./scoutReport # or path/to/artifact
 
   delete-file:
+    needs: scoutsuite
     runs-on: ubuntu-latest
     steps:
     - name: delete file
       run: |
+        cd ScoutSuite
         ls -la
-        rm -rf filetodelete.txt
+        rm -rf ../filetodelete.txt
+        rm -rf credfile.json
         echo "after delete"
         ls -la
