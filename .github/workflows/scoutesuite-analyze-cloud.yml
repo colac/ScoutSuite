@@ -6,18 +6,15 @@ on:
       - develop
       - master
 
-
-
 jobs:
   scoutsuite:
-  
     runs-on: ubuntu-latest
     steps:
     - name: Azure-Login
-    - uses: Azure/login@v1
+      uses: Azure/login@v1
       with:
         creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
-     - run: |
+    - run: |
         az resource list
     - name: Install and execute Scoutsuite
       run: |
@@ -30,4 +27,3 @@ jobs:
       with:
         name: scoutsuiteReport
         path: /ScoutSuite/scoutReport # or path/to/artifact
-
