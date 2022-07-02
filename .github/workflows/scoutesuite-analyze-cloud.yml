@@ -100,7 +100,7 @@ jobs:
         docker cp credfile.json scoutsuitegh:/root/ScoutSuite/credfile.json
     - name: run scoutsuite
       run: |
-        docker exec -d scoutsuitegh python3.8 /root/ScoutSuite/scout.py azure --file-auth /root/ScoutSuite/credfile.json--no-browser --report-dir /root/ScoutSuite/scout-report
+        docker exec -d scoutsuitegh python3.8 /root/ScoutSuite/scout.py azure --file-auth /root/ScoutSuite/credfile.json --no-browser --report-dir /root/ScoutSuite/scout-report
     - name: Sleep for 120s
       run: sleep 120s
       shell: bash
@@ -114,7 +114,9 @@ jobs:
       continue-on-error: true
     - name: docker rm container
       run: |
+        docker stop scoutsuitegh
         docker rm scoutsuitegh
+      continue-on-error: true
 
     - name: Upload Report Artifact
       uses: actions/upload-artifact@v3.1.0
