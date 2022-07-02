@@ -10,7 +10,6 @@ on:
 
 jobs:
   scoutsuite:
-    name: Configure and execute Scoutsuite
     runs-on: ubuntu-latest
     steps:
     - name: Azure-Login
