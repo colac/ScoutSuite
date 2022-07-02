@@ -27,7 +27,7 @@ jobs:
       run: |
         az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
         ls -la
-        python3.8 ScoutSuite/scout.py azure --cli --no-browser --report-dir /scoutReport
+        python3.8 ScoutSuite/scout.py azure --service-principal --no-browser --report-dir /scoutReport
 
     - name: Upload Report Artifact
       uses: actions/upload-artifact@v3.1.0
