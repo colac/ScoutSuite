@@ -101,6 +101,9 @@ jobs:
     - name: run scoutsuite
       run: |
         docker exec -d scoutsuitegh python3.8 ScoutSuite/scout.py azure --file-auth /credfile.json --no-browser --report-dir /ScoutSuite/scout-report
+    - name: Sleep for 120 seconds
+      run: sleep 120s
+      shell: bash
     - name: docker cp outside container
       run: |
         docker cp $(docker ps -f ancestor=ghcr.io/colac/scoutsuite:master --format "{{.ID}}"):/ScoutSuite/scout-report ./scoutReport
