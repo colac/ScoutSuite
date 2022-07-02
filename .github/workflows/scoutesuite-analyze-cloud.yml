@@ -97,16 +97,16 @@ jobs:
         docker run -t -d --name scoutsuitegh ghcr.io/colac/scoutsuite:master
     - name: docker cp inside container
       run: |
-        docker cp credfile.json scoutsuitegh:/
+        docker cp credfile.json scoutsuitegh:/root/ScoutSuite/credfile.json
     - name: run scoutsuite
       run: |
-        docker exec -d scoutsuitegh python3.8 ScoutSuite/scout.py azure --file-auth /credfile.json --no-browser --report-dir /ScoutSuite/scout-report
+        docker exec -d scoutsuitegh python3.8 /root/ScoutSuite/scout.py azure --file-auth /root/ScoutSuite/credfile.json--no-browser --report-dir /root/ScoutSuite/scout-report
     - name: Sleep for 480 seconds
       run: sleep 480s
       shell: bash
     - name: docker cp outside container
       run: |
-        docker cp $(docker ps -f ancestor=ghcr.io/colac/scoutsuite:master --format "{{.ID}}"):/ScoutSuite/scout-report ./scoutReport
+        docker cp $(docker ps -f ancestor=ghcr.io/colac/scoutsuite:master --format "{{.ID}}"):/root/ScoutSuite/scout-report ./scoutReport
     - name: docker rm container
       run: |
         docker rm scoutsuitegh
